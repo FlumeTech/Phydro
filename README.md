@@ -8,9 +8,9 @@ Example building against libhydrogen sources:
 ```sh
 $ mkdir src
 $ cd src
-$ git clone github.com/jedisct1/libhydrogen
-$ git clone github.com/phplang/phydro
-$ cd ohydro
+$ git clone https://github.com/jedisct1/libhydrogen.git
+$ git clone https://github.com/FlumeTech/phydro.git
+$ cd phydro
 $ phpize
 $ ./configure --with-phydro=../libhydrogen
 $ make
