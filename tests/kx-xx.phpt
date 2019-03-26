@@ -13,10 +13,10 @@ $psk = str_repeat('b',PHYDRO_KX_PSKBYTES);
 [ 'packet' => $packet1, 'state' => $client_state ] = phydro_kx_xx_1($psk);
 var_dump(get_class($client_state));
 
-[ 'packet' => $packet2, 'state' => $server_state ] = phydro_kx_xx_2($packet1, $psk, $server_pk, $server_sk);
+[ 'packet' => $packet2, 'state' => $server_state ] = phydro_kx_xx_2($packet1, $server_pk, $server_sk, $psk);
 var_dump(get_class($server_state));
 
-[ 'packet' => $packet3, 'keys' => [ 'tx' => $client_tx, 'rx' => $client_rx ], 'peer' => $client_peer ] = phydro_kx_xx_3($client_state, $packet2, $psk, $client_pk,$client_sk);
+[ 'packet' => $packet3, 'keys' => [ 'tx' => $client_tx, 'rx' => $client_rx ], 'peer' => $client_peer ] = phydro_kx_xx_3($client_state, $packet2, $client_pk, $client_sk, $psk);
 var_dump($client_peer === $server_pk);
 
 [ 'keys' => [ 'tx' => $server_tx, 'rx' => $server_rx ], 'peer' => $server_peer ] = phydro_kx_xx_4($server_state, $packet3, $psk);
