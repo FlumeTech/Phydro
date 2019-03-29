@@ -226,20 +226,20 @@ static PHP_FUNCTION(phydro_secretbox_keygen) {
 	RETURN_STRINGL(key, sizeof(key));
 } /* }}} */
 
-/* {{{ proto string phydro_secretbox_encrypt(string $message, int $id, string $context, string $key) */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(box_encrypt_arginfo, ZEND_RETURN_VALUE, 4, IS_STRING, 1)
+/* {{{ proto string phydro_secretbox_encrypt(string $message, string $key, string $context[, int $id = 0] ) */
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(box_encrypt_arginfo, ZEND_RETURN_VALUE, 3, IS_STRING, 1)
 	ZEND_ARG_TYPE_INFO(0, message, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, id, IS_LONG, 0)
-	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, id, IS_LONG, 0)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_secretbox_encrypt) {
-	zend_string *message, *context, *key, *ret;
-	zend_long id;
+	zend_string *message, *key, *context, *ret;
+	zend_long id = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SlSS", &message, &id, &context, &key) == FAILURE) { return; }
-	if (!validate(context, "Context", hydro_secretbox_CONTEXTBYTES) ||
-		!validate(key, "Key", hydro_secretbox_KEYBYTES)) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSS|l", &message, &key, &context, &id) == FAILURE) { return; }
+	if (!validate(key, "Key", hydro_secretbox_KEYBYTES) ||
+		!validate(context, "Context", hydro_secretbox_CONTEXTBYTES)) {
 		return;
 	}
 
@@ -254,20 +254,21 @@ static PHP_FUNCTION(phydro_secretbox_encrypt) {
 	RETURN_NEW_STR(ret);
 } /* }}} */
 
-/* {{{ proto string phydro_secretbox_decrypt(string $ciphertext, int $id, string $context, string $key) */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(box_decrypt_arginfo, ZEND_RETURN_VALUE, 4, IS_STRING, 1)
+/* {{{ proto string phydro_secretbox_decrypt(string $ciphertext, string $key, string $context[, int $id = 0]) */
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(box_decrypt_arginfo, ZEND_RETURN_VALUE, 3, IS_STRING, 1)
 	ZEND_ARG_TYPE_INFO(0, ciphertext, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, id, IS_LONG, 0)
-	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, id, IS_LONG, 0)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_secretbox_decrypt) {
-	zend_string *ciphertext, *context, *key, *ret;
-	zend_long id, ret_len;
+	zend_string *ciphertext, *key, *context, *ret;
+	zend_long ret_len;
+	zend_long id = 0;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SlSS", &ciphertext, &id, &context, &key) == FAILURE) { return; }
-	if (!validate(context, "Context", hydro_secretbox_CONTEXTBYTES) ||
-		!validate(key, "Key", hydro_secretbox_KEYBYTES)) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSS|l", &ciphertext, &key, &context, &id) == FAILURE) { return; }
+	if (!validate(key, "Key", hydro_secretbox_KEYBYTES) ||
+		!validate(context, "Context", hydro_secretbox_CONTEXTBYTES)) {
 		return;
 	}
 
@@ -283,17 +284,17 @@ static PHP_FUNCTION(phydro_secretbox_decrypt) {
 	RETURN_NEW_STR(ret);
 } /* }}} */
 
-/* {{{ proto string phydro_secretbox_probe_create(string $ciphertext, string $context, string $key) */
+/* {{{ proto string phydro_secretbox_probe_create(string $ciphertext, string $key, string $context) */
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(box_probe_create_arginfo, ZEND_RETURN_VALUE, 3, IS_STRING, 1)
 	ZEND_ARG_TYPE_INFO(0, ciphertext, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_secretbox_probe_create) {
-	zend_string *ciphertext, *context, *key, *ret;
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSS", &ciphertext, &context, &key) == FAILURE) { return; }
-	if (!validate(context, "Context", hydro_secretbox_CONTEXTBYTES) ||
-		!validate(key, "Key", hydro_secretbox_KEYBYTES)) {
+	zend_string *ciphertext, *key, *context, *ret;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSS", &ciphertext, &key, &context) == FAILURE) { return; }
+	if (!validate(key, "Key", hydro_secretbox_KEYBYTES) ||
+		!validate(context, "Context", hydro_secretbox_CONTEXTBYTES)) {
 		return;
 	}
 	ret = zend_string_alloc(hydro_secretbox_PROBEBYTES, 0);
@@ -303,18 +304,18 @@ static PHP_FUNCTION(phydro_secretbox_probe_create) {
 	RETURN_NEW_STR(ret);
 } /* }}} */
 
-/* {{{ proto bool phydro_secretbox_probe_verify(string $probe, string $ciphertext, string $context, string $key) */
+/* {{{ proto bool phydro_secretbox_probe_verify(string $probe, string $ciphertext, string $key, string $context) */
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(box_probe_verify_arginfo, ZEND_RETURN_VALUE, 4, _IS_BOOL, 1)
 	ZEND_ARG_TYPE_INFO(0, probe, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, ciphertext, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_secretbox_probe_verify) {
-	zend_string *probe, *ciphertext, *context, *key;
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSSS", &probe, &ciphertext, &context, &key) == FAILURE) { return; }
-	if (!validate(context, "Context", hydro_secretbox_CONTEXTBYTES) ||
-		!validate(key, "Key", hydro_secretbox_KEYBYTES)) {
+	zend_string *probe, *ciphertext, *key, *context;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSSS", &probe, &ciphertext, &key, &context) == FAILURE) { return; }
+	if (!validate(key, "Key", hydro_secretbox_KEYBYTES) ||
+		!validate(context, "Context", hydro_secretbox_CONTEXTBYTES)) {
 		return;
 	}
 	if (ZSTR_LEN(probe) != hydro_secretbox_PROBEBYTES) {
@@ -341,29 +342,30 @@ static PHP_FUNCTION(phydro_kdf_keygen) {
 	RETURN_NEW_STR(ret);
 } /* }}} */
 
-/* {{{ proto string phydro_kdf_derive_from_key(int $len, int $id, string $context, string $key) */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(kdf_derive_from_key_arginfo, ZEND_RETURN_VALUE, 4, IS_STRING, 1)
-	ZEND_ARG_TYPE_INFO(0, length, IS_LONG, 0)
-	ZEND_ARG_TYPE_INFO(0, id, IS_LONG, 0)
-	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
+/* {{{ proto string phydro_kdf_derive_from_key(string $key, string $context[, int $id = 0, int $len =  hydro_kdf_KEYBYTES]) */
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(kdf_derive_from_key_arginfo, ZEND_RETURN_VALUE, 2, IS_STRING, 1)
 	ZEND_ARG_TYPE_INFO(0, key, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, context, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, id, IS_LONG, 0)
+	ZEND_ARG_TYPE_INFO(0, length, IS_LONG, 0)
+
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_kdf_derive_from_key) {
-	zend_long len, id;
-	zend_string *context, *key, *ret;
+	zend_string *key, *context, *ret;
+	zend_long id = 0, len = hydro_kdf_KEYBYTES;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "llSS", &len, &id, &context, &key) == FAILURE) { return; }
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SS|ll", &key, &context, &id, &len) == FAILURE) { return; }
 
-	if ((len < hydro_kdf_BYTES_MIN) || (len > hydro_kdf_BYTES_MAX)) {
-		php_error(E_RECOVERABLE_ERROR, "Invalid length specified %ld, must be between %d and %d", len, hydro_kdf_BYTES_MIN, hydro_kdf_BYTES_MAX);
+	if (ZSTR_LEN(key) != hydro_kdf_KEYBYTES) {
+		php_error(E_RECOVERABLE_ERROR, "Key must be precisely %d bytes", hydro_kdf_KEYBYTES);
 		return;
 	}
 	if (ZSTR_LEN(context) != hydro_kdf_CONTEXTBYTES) {
 		php_error(E_RECOVERABLE_ERROR, "Context must be precisely %d bytes", hydro_kdf_CONTEXTBYTES);
 		return;
 	}
-	if (ZSTR_LEN(key) != hydro_kdf_KEYBYTES) {
-		php_error(E_RECOVERABLE_ERROR, "Key must be precisely %d bytes", hydro_kdf_KEYBYTES);
+	if ((len < hydro_kdf_BYTES_MIN) || (len > hydro_kdf_BYTES_MAX)) {
+		php_error(E_RECOVERABLE_ERROR, "Invalid length specified %ld, must be between %d and %d", len, hydro_kdf_BYTES_MIN, hydro_kdf_BYTES_MAX);
 		return;
 	}
 	ret = zend_string_alloc(len, 0);
@@ -560,27 +562,28 @@ static PHP_FUNCTION(phydro_kx_keygen) {
 	hydro_memzero(&kp, sizeof(kp));
 } /* }}} */
 
-/* {{{ proto array phydro_kx_n_1(string $psk, string $publicKey)
+/* {{{ proto array phydro_kx_n_1(string $publicKey[, string $psk = null])
  * Return array:
  * 'packet' => $packet1
  * 'keys' => [ 'tx' => $tx, 'rx' => $rx ]
  */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(n1_arginfo, ZEND_RETURN_VALUE, 2, IS_ARRAY, 1)
-	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(n1_arginfo, ZEND_RETURN_VALUE, 1, IS_ARRAY, 1)
 	ZEND_ARG_TYPE_INFO(0, publicKey, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 1)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_kx_n_1) {
-	zend_string *psk, *pubkey;
+	zend_string *pubkey;
 	hydro_kx_session_keypair skp;
 	uint8_t packet[hydro_kx_N_PACKET1BYTES];
 	zval zskp;
+	zend_string *psk = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SS", &psk, &pubkey) == FAILURE) { return; }
-	if (!validate(psk, "PSK", hydro_kx_PSKBYTES) ||
-		!validate(pubkey, "Public key", hydro_kx_PUBLICKEYBYTES)) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|S!", &pubkey, &psk) == FAILURE) { return; }
+	if (!validate(pubkey, "Public key", hydro_kx_PUBLICKEYBYTES) ||
+		(psk && !validate(psk, "PSK", hydro_kx_PSKBYTES))) {
 		return;
 	}
-	if (hydro_kx_n_1(&skp, packet, ZSTR_VAL(psk), ZSTR_VAL(pubkey))) {
+	if (hydro_kx_n_1(&skp, packet, psk ? ZSTR_VAL(psk) : NULL, ZSTR_VAL(pubkey))) {
 		php_error(E_RECOVERABLE_ERROR, "Error generating N1 packet and session keys");
 		return;
 	}
@@ -596,32 +599,32 @@ static PHP_FUNCTION(phydro_kx_n_1) {
 	hydro_memzero(&skp, sizeof(skp));
 } /* }}} */
 
-/* {{{ proto array phydro_kx_n_2(string $packet_1, string $psk, string $publicKey, string $secretKey)
+/* {{{ proto array phydro_kx_n_2(string $packet_1, string $publicKey, string $secretKey[, string $psk = null])
  * Return array:
  * 'tx' => $tx
  * 'rx' => $rx
  */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(n2_arginfo, ZEND_RETURN_VALUE, 4, IS_ARRAY, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(n2_arginfo, ZEND_RETURN_VALUE, 3, IS_ARRAY, 1)
 	ZEND_ARG_TYPE_INFO(0, packet1, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, publicKey, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, secretKey, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 1)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_kx_n_2) {
-	zend_string *packet1, *psk, *pubkey, *seckey;
+	zend_string *packet1, *pubkey, *seckey;
 	hydro_kx_keypair kp;
 	hydro_kx_session_keypair skp;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSSS", &packet1, &psk, &pubkey, &seckey) == FAILURE) { return; }
+    zend_string *psk = NULL;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSS|S!", &packet1, &pubkey, &seckey, &psk) == FAILURE) { return; }
 	if (!validate(packet1, "Packet 1", hydro_kx_N_PACKET1BYTES) ||
-		!validate(psk, "PSK", hydro_kx_PSKBYTES) ||
 		!validate(pubkey, "Public key", hydro_kx_PUBLICKEYBYTES) ||
-		!validate(seckey, "Secret key", hydro_kx_SECRETKEYBYTES)) {
+		!validate(seckey, "Secret key", hydro_kx_SECRETKEYBYTES) ||
+		(psk && !validate(psk, "PSK", hydro_kx_PSKBYTES))) {
 		return;
 	}
 	memcpy(kp.pk, ZSTR_VAL(pubkey), sizeof(kp.pk));
 	memcpy(kp.sk, ZSTR_VAL(seckey), sizeof(kp.sk));
-	if (hydro_kx_n_2(&skp, ZSTR_VAL(packet1), ZSTR_VAL(psk), &kp)) {
+	if (hydro_kx_n_2(&skp, ZSTR_VAL(packet1), psk ? ZSTR_VAL(psk) : NULL, &kp)) {
 		hydro_memzero(&kp, sizeof(kp));
 		php_error(E_RECOVERABLE_ERROR, "Failure generating session keys");
 		return;
@@ -763,25 +766,25 @@ static PHP_FUNCTION(phydro_kx_kk_3) {
 	hydro_memzero(&skp, sizeof(skp));
 } /* }}} */
 
-/* {{{ proto array phydro_kx_xx_1(string $psk)
+/* {{{ proto array phydro_kx_xx_1([string $psk = null])
  * Return array:
  * 'packet' => $packet1
  * 'state' => $state
  */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(xx1_arginfo, ZEND_RETURN_VALUE, 1, IS_ARRAY, 1)
-	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(xx1_arginfo, ZEND_RETURN_VALUE, 0, IS_ARRAY, 1)
+	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 1)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_kx_xx_1) {
-	zend_string *psk;
 	hydro_kx_state state;
 	uint8_t packet1[hydro_kx_XX_PACKET1BYTES];
 	zend_object *state_obj;
 	zval zstate;
+	zend_string *psk = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &psk) == FAILURE) { return; }
-	if (!validate(psk, "PSK", hydro_kx_PSKBYTES)) { return; }
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|S!", &psk) == FAILURE) { return; }
+	if (psk && !validate(psk, "PSK", hydro_kx_PSKBYTES)) { return; }
 
-	if (hydro_kx_xx_1(&state, packet1, ZSTR_VAL(psk))) {
+	if (hydro_kx_xx_1(&state, packet1, psk ? ZSTR_VAL(psk) : NULL)) {
 		php_error(E_RECOVERABLE_ERROR, "Unable to create packet");
 		return;
 	}
@@ -802,34 +805,35 @@ static PHP_FUNCTION(phydro_kx_xx_1) {
 	hydro_memzero(packet1, sizeof(packet1));
 } /* }}} */
 
-/* {{{ proto array phydro_kx_xx_2(string $packet1, string $psk, string $pubkey, string $seckey)
+/* {{{ proto array phydro_kx_xx_2(string $packet1, string $pubkey, string $seckey[, string $psk = null])
  * Return array:
  * 'packet' => $packet3
  * 'state' => $state
  */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(xx2_arginfo, ZEND_RETURN_VALUE, 4, IS_ARRAY, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(xx2_arginfo, ZEND_RETURN_VALUE, 3, IS_ARRAY, 1)
 	ZEND_ARG_TYPE_INFO(0, packet1, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, pubkey, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, seckey, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 1)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_kx_xx_2) {
-	zend_string *packet1, *psk, *pubkey, *seckey;
+	zend_string *packet1, *pubkey, *seckey;
 	hydro_kx_state state;
 	uint8_t packet2[hydro_kx_XX_PACKET2BYTES];
 	hydro_kx_keypair kp;
 	zend_object *state_obj;
 	zval zstate;
+	zend_string *psk = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSSS", &packet1, &psk, &pubkey, &seckey) == FAILURE) { return; }
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "SSS|S!", &packet1, &pubkey, &seckey, &psk) == FAILURE) { return; }
 	if (!validate(packet1, "Packet 1", hydro_kx_XX_PACKET1BYTES) ||
-		!validate(psk, "PSK", hydro_kx_PSKBYTES) ||
 		!validate(pubkey, "Public key", hydro_kx_PUBLICKEYBYTES) ||
-		!validate(seckey, "Secret Key", hydro_kx_SECRETKEYBYTES)) { return; }
+		!validate(seckey, "Secret Key", hydro_kx_SECRETKEYBYTES) ||
+		(psk && !validate(psk, "PSK", hydro_kx_PSKBYTES))) { return; }
 
 	memcpy(kp.pk, ZSTR_VAL(pubkey), hydro_kx_PUBLICKEYBYTES);
 	memcpy(kp.sk, ZSTR_VAL(seckey), hydro_kx_SECRETKEYBYTES);
-	if (hydro_kx_xx_2(&state, packet2, ZSTR_VAL(packet1), ZSTR_VAL(psk), &kp)) {
+	if (hydro_kx_xx_2(&state, packet2, ZSTR_VAL(packet1), psk ? ZSTR_VAL(psk) : NULL, &kp)) {
 		hydro_memzero(&kp, sizeof(kp));
 		php_error(E_RECOVERABLE_ERROR, "Unable to create packet");
 		return;
@@ -852,40 +856,41 @@ static PHP_FUNCTION(phydro_kx_xx_2) {
 	hydro_memzero(packet2, sizeof(packet2));
 } /* }}} */
 
-/* {{{ proto array phydro_kx_xx_3(PhydroKXState $state, string $packet2, string $psk, string $pubkey, string $seckey)
+/* {{{ proto array phydro_kx_xx_3(PhydroKXState $state, string $packet2, string $pubkey, string $seckey[, string $psk = null])
  * Return array:
  * 'packet' => $packet3
  * 'keys' => [ 'tx' => $tx, 'rx' => $rx ]
  * 'peer' => $peerPublicKey
  */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(xx3_arginfo, ZEND_RETURN_VALUE, 5, IS_ARRAY, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(xx3_arginfo, ZEND_RETURN_VALUE, 4, IS_ARRAY, 1)
 	ZEND_ARG_OBJ_INFO(0, state, PhydroKXState, 0)
 	ZEND_ARG_TYPE_INFO(0, packet2, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, pubkey, IS_STRING, 0)
 	ZEND_ARG_TYPE_INFO(0, seckey, IS_STRING, 0)
+    ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 1)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_kx_xx_3) {
 	zval *zstate;
-	zend_string *packet2, *psk, *pubkey, *seckey;
+	zend_string *packet2, *pubkey, *seckey;
 	hydro_kx_state *state;
 	hydro_kx_keypair kp;
 	hydro_kx_session_keypair skp;
 	zval zskp;
 	uint8_t packet3[hydro_kx_XX_PACKET3BYTES];
 	uint8_t peer[hydro_kx_PUBLICKEYBYTES];
+	zend_string *psk = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "OSSSS", &zstate, phydro_kx_ce, &packet2, &psk, &pubkey, &seckey) == FAILURE) { return; }
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "OSSS|S!", &zstate, phydro_kx_ce, &packet2, &pubkey, &seckey, &psk) == FAILURE) { return; }
 	if (!validate(packet2, "Packet 2", hydro_kx_XX_PACKET2BYTES) ||
-		!validate(psk, "PSK", hydro_kx_PSKBYTES) ||
 		!validate(pubkey, "Public key", hydro_kx_PUBLICKEYBYTES) ||
-		!validate(seckey, "Secret key", hydro_kx_SECRETKEYBYTES)) {
+		!validate(seckey, "Secret key", hydro_kx_SECRETKEYBYTES) ||
+		(psk && !validate(psk, "PSK", hydro_kx_PSKBYTES))) {
 		return;
 	}
 	state = phydro_kx_get_state(Z_OBJ_P(zstate));
 	memcpy(kp.pk, ZSTR_VAL(pubkey), sizeof(kp.pk));
 	memcpy(kp.sk, ZSTR_VAL(seckey), sizeof(kp.sk));
-	if (hydro_kx_xx_3(state, &skp, packet3, peer, ZSTR_VAL(packet2), ZSTR_VAL(psk), &kp)) {
+	if (hydro_kx_xx_3(state, &skp, packet3, peer, ZSTR_VAL(packet2), psk ? ZSTR_VAL(psk) : NULL, &kp)) {
 		hydro_memzero(&kp, sizeof(kp));
 		php_error(E_RECOVERABLE_ERROR, "Failure generating packet");
 		return;
@@ -906,31 +911,32 @@ static PHP_FUNCTION(phydro_kx_xx_3) {
 	hydro_memzero(&skp, sizeof(skp));
 } /* }}} */
 
-/* {{{ proto array phydro_kx_xx_4(PhydroKXState $state, string $packet3, string $psk)
+/* {{{ proto array phydro_kx_xx_4(PhydroKXState $state, string $packet3[, string $psk = null])
  * Return array:
  * 'keys' => [ 'tx' => $tx, 'rx' => $rx ]
  * 'peer' => $peerPublicKey
  */
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(xx4_arginfo, ZEND_RETURN_VALUE, 3, IS_ARRAY, 1)
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(xx4_arginfo, ZEND_RETURN_VALUE, 2, IS_ARRAY, 1)
 	ZEND_ARG_OBJ_INFO(0, state, PhydroKXState, 0)
 	ZEND_ARG_TYPE_INFO(0, packet3, IS_STRING, 0)
-	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 0)
+	ZEND_ARG_TYPE_INFO(0, psk, IS_STRING, 1)
 ZEND_END_ARG_INFO();
 static PHP_FUNCTION(phydro_kx_xx_4) {
 	zval *zstate;
-	zend_string *packet3, *psk;
+	zend_string *packet3;
 	hydro_kx_state *state;
 	hydro_kx_session_keypair skp;
 	zval zskp;
 	uint8_t peer[hydro_kx_PUBLICKEYBYTES];
+	zend_string *psk = NULL;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS(), "OSS", &zstate, phydro_kx_ce, &packet3, &psk) == FAILURE) { return; }
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "OS|S!", &zstate, phydro_kx_ce, &packet3, &psk) == FAILURE) { return; }
 	if (!validate(packet3, "Packet 3", hydro_kx_XX_PACKET3BYTES) ||
-		!validate(psk, "PSK", hydro_kx_PSKBYTES)) {
+		(psk && !validate(psk, "PSK", hydro_kx_PSKBYTES))) {
 		return;
 	}
 	state = phydro_kx_get_state(Z_OBJ_P(zstate));
-	if (hydro_kx_xx_4(state, &skp, peer, ZSTR_VAL(packet3), ZSTR_VAL(psk))) {
+	if (hydro_kx_xx_4(state, &skp, peer, ZSTR_VAL(packet3), psk ? ZSTR_VAL(psk) : NULL)) {
 		php_error(E_RECOVERABLE_ERROR, "Failure generating session keys");
 		return;
 	}

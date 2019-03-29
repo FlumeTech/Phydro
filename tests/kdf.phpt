@@ -12,14 +12,14 @@ $context2 = str_repeat('b', PHYDRO_KDF_CONTEXTBYTES);
 $len = PHYDRO_KDF_BYTES_MIN;
 
 // Same len/id/context generates same key.
-$subkey = phydro_kdf_derive_from_key($len, 1, $context, $key);
-var_dump($subkey === phydro_kdf_derive_from_key($len, 1, $context, $key));
+$subkey = phydro_kdf_derive_from_key($key, $context, 1, $len);
+var_dump($subkey === phydro_kdf_derive_from_key($key, $context, 1, $len));
 
 // Differing any one value generates different key.
-var_dump($subkey !== phydro_kdf_derive_from_key($len, 2, $context, $key));
-var_dump($subkey !== phydro_kdf_derive_from_key($len+1, 1, $context, $key));
-var_dump($subkey !== phydro_kdf_derive_from_key($len, 1, $context2, $key));
-var_dump($subkey !== phydro_kdf_derive_from_key($len, 1, $context, $key2));
+var_dump($subkey !== phydro_kdf_derive_from_key($key, $context, 2, $len));
+var_dump($subkey !== phydro_kdf_derive_from_key($key, $context, 1, $len+1));
+var_dump($subkey !== phydro_kdf_derive_from_key($key, $context2, 1, $len));
+var_dump($subkey !== phydro_kdf_derive_from_key($key2, $context, 1, $len));
 --EXPECT--
 bool(true)
 bool(true)
